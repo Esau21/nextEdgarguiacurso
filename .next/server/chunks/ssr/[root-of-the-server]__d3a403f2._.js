@@ -121,23 +121,19 @@ async function createInvoice(prevState, formData) {
             message: 'Missing Fields. Failed to Create Invoice.'
         };
     }
-    // Prepare data for insertion into the database
     const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100;
     const date = new Date().toISOString().split('T')[0];
-    // Insert data into the database
     try {
         await sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+            INSERT INTO invoices (customer_id, amount, status, date)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
         `;
     } catch (error) {
-        // If a database error occurs, return a more specific error.
         return {
             message: 'Database Error: Failed to Create Invoice.'
         };
     }
-    // Revalidate the cache for the invoices page and redirect the user.
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$3$2e$1$2d$canary$2e$15_react_5752b3939e25b60dbe7aa37624506ba6$2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/dashboard/invoices');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$3$2e$1$2d$canary$2e$15_react_5752b3939e25b60dbe7aa37624506ba6$2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["redirect"])('/dashboard/invoices');
 }
@@ -161,10 +157,10 @@ async function updateInvoice(id, prevState, formData) {
     const amountInCents = amount * 100;
     try {
         await sql`
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-      `;
+            UPDATE invoices
+            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+            WHERE id = ${id}
+        `;
     } catch (error) {
         return {
             message: 'Database Error: Failed to Update Invoice.'
@@ -179,8 +175,18 @@ async function deleteInvoice(id) {
     throw new Error('Failed to Delete Invoice');
 }
 async function authenticate(prevState, formData) {
+    const email = formData.get('email');
+    const password = formData.get('password');
     try {
-        await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$2d$auth$40$5$2e$0$2e$0$2d$beta$2e$27_nex_57e0476237ac3a803b5e48e9d0cc2a06$2f$node_modules$2f$next$2d$auth$2f$react$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["signIn"])('credentials', formData);
+        const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$2d$auth$40$5$2e$0$2e$0$2d$beta$2e$27_nex_57e0476237ac3a803b5e48e9d0cc2a06$2f$node_modules$2f$next$2d$auth$2f$react$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["signIn"])('credentials', {
+            redirect: false,
+            email,
+            password
+        });
+        if (res?.error) {
+            return 'Invalid credentials.';
+        }
+        return null;
     } catch (error) {
         if (error instanceof __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$auth$2b$core$40$0$2e$39$2e$0$2f$node_modules$2f40$auth$2f$core$2f$errors$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["AuthError"]) {
             switch(error.name){

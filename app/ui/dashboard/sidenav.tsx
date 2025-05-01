@@ -3,7 +3,7 @@ import NavLinks from '@/app/ui/dashboard/nav-links';
 import AcmeLogo from '@/app/ui/acme-logo';
 import { PowerIcon } from '@heroicons/react/24/outline';
 export const experimental_ppr = true;
-import { signOut } from '@/auth';
+import { signOut } from 'next-auth/react';
 
 export default function SideNav() {
   return (

@@ -47,24 +47,22 @@ export async function createInvoice(prevState: State, formData: FormData) {
             message: 'Missing Fields. Failed to Create Invoice.',
         };
     }
-    // Prepare data for insertion into the database
+
     const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100;
     const date = new Date().toISOString().split('T')[0];
 
-    // Insert data into the database
     try {
         await sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+            INSERT INTO invoices (customer_id, amount, status, date)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
         `;
     } catch (error) {
-        // If a database error occurs, return a more specific error.
         return {
             message: 'Database Error: Failed to Create Invoice.',
         };
     }
-    // Revalidate the cache for the invoices page and redirect the user.
+
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
 }
@@ -94,10 +92,10 @@ export async function updateInvoice(
 
     try {
         await sql`
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-      `;
+            UPDATE invoices
+            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+            WHERE id = ${id}
+        `;
     } catch (error) {
         return { message: 'Database Error: Failed to Update Invoice.' };
     }
@@ -111,12 +109,26 @@ export async function deleteInvoice(id: string) {
     revalidatePath('/dashboard/invoices');
     throw new Error('Failed to Delete Invoice');
 }
+
 export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
 ) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
     try {
-        await signIn('credentials', formData);
+        const res = await signIn('credentials', {
+            redirect: false,
+            email,
+            password,
+        });
+
+        if (res?.error) {
+            return 'Invalid credentials.';
+        }
+
+        return null;
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.name) {
