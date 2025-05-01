@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
 
-
+import { getSession } from 'next-auth/react'; // Usando getSession en el servidor
 import { AuthError } from 'next-auth';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -36,7 +36,7 @@ const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export async function createInvoice(prevState: State, formData: FormData) {
     const validatedFields = CreateInvoice.safeParse({
-        customerId: formData.get('customerId'),
+        customerId: formData.get('customerId')?.toString(), // Aseguramos que sea un string
         amount: formData.get('amount'),
         status: formData.get('status'),
     });
@@ -47,6 +47,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
             message: 'Missing Fields. Failed to Create Invoice.',
         };
     }
+
     // Prepare data for insertion into the database
     const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100;
@@ -59,11 +60,11 @@ export async function createInvoice(prevState: State, formData: FormData) {
         VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
         `;
     } catch (error) {
-        // If a database error occurs, return a more specific error.
         return {
             message: 'Database Error: Failed to Create Invoice.',
         };
     }
+
     // Revalidate the cache for the invoices page and redirect the user.
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
@@ -77,7 +78,7 @@ export async function updateInvoice(
     formData: FormData,
 ) {
     const validatedFields = UpdateInvoice.safeParse({
-        customerId: formData.get('customerId'),
+        customerId: formData.get('customerId')?.toString(), // Aseguramos que sea un string
         amount: formData.get('amount'),
         status: formData.get('status'),
     });
@@ -111,12 +112,18 @@ export async function deleteInvoice(id: string) {
     revalidatePath('/dashboard/invoices');
     throw new Error('Failed to Delete Invoice');
 }
+
 export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
 ) {
     try {
-        
+        // En lugar de signIn, uso getSession para autenticar en el servidor
+        const session = await getSession();
+        if (!session) {
+            return 'User is not authenticated';
+        }
+        // Aquí podrías agregar más lógica para autenticar al usuario con credenciales si es necesario
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.name) {
